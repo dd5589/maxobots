@@ -88,3 +88,27 @@ test('пустая строка отклоняется', () => {
     false
   );
 });
+
+test('дублирующийся параметр отклоняется', () => {
+  const params = new URLSearchParams();
+  params.append('user', JSON.stringify({ id: 1 }));
+  params.append('user', JSON.stringify({ id: 2 }));
+  params.set('auth_date', String(Math.floor(Date.now() / 1000)));
+  params.set('hash', sign(params, BOT_TOKEN));
+
+  const result = validateInitData(params.toString(), BOT_TOKEN);
+
+  assert.equal(result.valid, false);
+  assert.equal(result.error, 'duplicate_param');
+});
+
+test('пустой user отклоняется после проверки подписи', () => {
+  const initData = new URLSearchParams();
+  initData.set('auth_date', String(Math.floor(Date.now() / 1000)));
+  initData.set('hash', sign(initData, BOT_TOKEN));
+
+  const result = validateInitData(initData.toString(), BOT_TOKEN);
+
+  assert.equal(result.valid, false);
+  assert.equal(result.error, 'user_missing');
+});

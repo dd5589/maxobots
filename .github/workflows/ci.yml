@@ -30,6 +30,12 @@ jobs:
       - name: Syntax check
         run: npm run lint
 
+      - name: Repository hygiene
+        run: npm run check:repo
+
+      - name: Check whitespace errors
+        run: git diff --check
+
   mini-app:
     runs-on: ubuntu-latest
 

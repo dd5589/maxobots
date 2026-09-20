@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { matchReasons } from '../src/services/matcher.js';
+import { formatReasonCard, matchReasons } from '../src/services/matcher.js';
 import { _resetCache } from '../src/services/reasons.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -62,4 +62,19 @@ test('Текст отказа "превышение дохода" не долж�
   });
 
   assert.equal(results[0].reason.id, 'income_calc');
+});
+
+
+test('Карточка результата использует реальные переносы строк и маркирует результат как информационный', () => {
+  _resetCache();
+
+  const result = matchReasons({
+    refusalText: 'превышение дохода',
+  })[0];
+  const card = formatReasonCard(result);
+
+  assert.match(card, /Возможная причина/);
+  assert.match(card, /\n/);
+  assert.doesNotMatch(card, /\\n/);
+  assert.match(card, /не официальное решение ведомства/);
 });

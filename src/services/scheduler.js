@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { remindersStore, formatReminderText } from './reminders.js';
+import { storage } from './storage.js';
 import { maxApi } from '../bot/api.js';
 
 let task = null;
@@ -13,6 +14,8 @@ async function tick() {
   running = true;
 
   try {
+    storage.pruneExpired();
+
     const due = remindersStore.getDue();
 
     for (const reminder of due) {

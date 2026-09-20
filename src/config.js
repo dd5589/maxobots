@@ -28,6 +28,8 @@ export const config = {
   allowDevAuth: process.env.ALLOW_DEV_AUTH === 'true',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   dataDir: process.env.DATA_DIR || './runtime',
+  sessionTtlSeconds: optionalNumber('SESSION_TTL_SECONDS', 7200),
+  maxAnswerLength: optionalNumber('MAX_ANSWER_LENGTH', 2000),
 };
 
 export function assertBotToken() {

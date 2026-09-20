@@ -15,6 +15,7 @@ test('schedule создаёт pending-напоминание', () => {
   });
   assert.equal(r.status, 'pending');
   assert.equal(r.userId, 'u1');
+  assert.match(r.id, /^rem_[0-9a-f-]{36}$/);
   assert.ok(r.dueAt > Date.now());
 });
 

@@ -1,73 +1,136 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
+import { createJsonStore } from './jsonStore.js';
 
-const filePath = path.resolve(config.dataDir, 'users.json');
+const store = createJsonStore(
+  path.resolve(config.dataDir, 'sessions.json'),
+  {
+    fallback: {},
+    label: 'storage',
+  }
+);
 
-function ensureFile() {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+const sessions = store.getAll();
 
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}, null, 2), 'utf8');
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function isExpired(state) {
+  if (!state?.updatedAt || config.sessionTtlSeconds <= 0) {
+    return false;
+  }
+
+  const updatedAt = Date.parse(state.updatedAt);
+
+  if (!Number.isFinite(updatedAt)) {
+    return true;
+  }
+
+  return Date.now() - updatedAt > config.sessionTtlSeconds * 1000;
+}
+
+function pruneExpired() {
+  let changed = false;
+
+  for (const [key, state] of Object.entries(sessions)) {
+    if (isExpired(state)) {
+      delete sessions[key];
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    store.save();
   }
 }
 
-function readAll() {
-  ensureFile();
-
-  try {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const parsed = JSON.parse(raw || '{}');
-
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch (error) {
-    console.error('[storage] Не удалось прочитать users.json:', error.message);
-    return {};
+function normalizeState(state = {}) {
+  if (!state || typeof state !== 'object' || Array.isArray(state)) {
+    throw new TypeError('[storage] state must be an object');
   }
+
+  return {
+    ...state,
+    updatedAt: nowIso(),
+  };
 }
 
-function writeAll(data) {
-  ensureFile();
+function applyPatch(current, patch) {
+  const next = {
+    ...(current ?? {}),
+  };
 
-  const tempPath = `${filePath}.tmp`;
+  for (const [key, value] of Object.entries(patch ?? {})) {
+    if (value === undefined) {
+      delete next[key];
+    } else {
+      next[key] = value;
+    }
+  }
 
-  fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), 'utf8');
-  fs.renameSync(tempPath, filePath);
+  return normalizeState(next);
 }
-
-const users = readAll();
 
 export const storage = {
   get(userId) {
-    return users[String(userId)] ?? null;
+    const key = String(userId);
+    const state = sessions[key] ?? null;
+
+    if (state && isExpired(state)) {
+      delete sessions[key];
+      store.save();
+      return null;
+    }
+
+    return state;
   },
 
   set(userId, state) {
-    users[String(userId)] = state;
-    writeAll(users);
+    const key = String(userId);
+    const timestamp = nowIso();
+
+    sessions[key] = normalizeState({
+      ...state,
+      createdAt: state?.createdAt ?? timestamp,
+    });
+
+    store.save();
+    return sessions[key];
   },
 
   update(userId, patch) {
     const key = String(userId);
-    const current = users[key] ?? {};
-    const next = { ...current, ...patch };
+    const next = applyPatch(sessions[key], patch);
 
-    users[key] = next;
-    writeAll(users);
+    sessions[key] = next;
+    store.save();
 
     return next;
   },
 
+  clearAnswers(userId) {
+    return this.update(userId, { answers: undefined });
+  },
+
+  pruneExpired() {
+    pruneExpired();
+  },
+
   reset(userId) {
-    delete users[String(userId)];
-    writeAll(users);
+    delete sessions[String(userId)];
+    store.save();
   },
 
   _reset() {
-    for (const key of Object.keys(users)) {
-      delete users[key];
+    for (const key of Object.keys(sessions)) {
+      delete sessions[key];
     }
 
-    writeAll(users);
+    store.save();
   },
+
+  _filePath: store.filePath,
 };
+
+pruneExpired();

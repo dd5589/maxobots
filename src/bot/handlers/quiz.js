@@ -35,9 +35,18 @@ export async function finish(bot, ctx, userId) {
 
   const top = topResult.reason;
 
+  // Remove raw answers before sending the result, so a failed MAX request
+  // does not leave the user's refusal text in persistent runtime storage.
+  storage.update(userId, {
+    done: true,
+    awaitingReminder: true,
+    topReasonId: top.id,
+  });
+  storage.clearAnswers(userId);
+
   await ctx.reply('Спасибо! Я проанализировал ваши ответы.');
 
-  await ctx.reply(formatReasonCard(top), {
+  await ctx.reply(formatReasonCard(topResult), {
     format: 'markdown',
   });
 
@@ -68,11 +77,4 @@ export async function finish(bot, ctx, userId) {
     '3. При повторном отказе — запросите письменное разъяснение в СФР.\n\n' +
     'Напомнить о подаче через 3 дня? Напишите «да» или «нет».'
   );
-
-  storage.update(userId, {
-    done: true,
-    awaitingReminder: true,
-    topReasonId: top.id,
-    topReasonTitle: top.title,
-  });
 }

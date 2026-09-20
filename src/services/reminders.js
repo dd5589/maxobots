@@ -1,45 +1,26 @@
-import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { config } from '../config.js';
+import { createJsonStore } from './jsonStore.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const filePath = path.resolve(config.dataDir, 'reminders.json');
 
-function ensureFile() {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}, null, 2), 'utf8');
+const store = createJsonStore(
+  path.resolve(config.dataDir, 'reminders.json'),
+  {
+    fallback: {},
+    label: 'reminders',
   }
-}
+);
 
-function readAll() {
-  ensureFile();
-
-  try {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const parsed = JSON.parse(raw || '{}');
-
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch (error) {
-    console.error('[reminders] Не удалось прочитать reminders.json:', error.message);
-    return {};
-  }
-}
-
-function writeAll(data) {
-  ensureFile();
-
-  const tempPath = `${filePath}.tmp`;
-
-  fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), 'utf8');
-  fs.renameSync(tempPath, filePath);
-}
-
-const reminders = readAll();
+const reminders = store.getAll();
 
 function genId(userId) {
-  return `rem_${Date.now()}_${userId}_${Math.random().toString(36).slice(2, 8)}`;
+  return `rem_${crypto.randomUUID()}`;
+}
+
+function persist() {
+  store.save();
 }
 
 export const remindersStore = {
@@ -48,11 +29,11 @@ export const remindersStore = {
     type,
     daysFromNow = 3,
     timezone = config.tz,
-    payload = {},
   }) {
+    const normalizedUserId = String(userId);
     const existing = Object.values(reminders).find(
       (reminder) =>
-        reminder.userId === String(userId) &&
+        reminder.userId === normalizedUserId &&
         reminder.type === type &&
         reminder.status === 'pending'
     );
@@ -64,12 +45,11 @@ export const remindersStore = {
     const now = Date.now();
 
     const reminder = {
-      id: genId(userId),
-      userId: String(userId),
+      id: genId(normalizedUserId),
+      userId: normalizedUserId,
       type,
       dueAt: now + daysFromNow * DAY_MS,
       timezone,
-      payload,
       status: 'pending',
       attempts: 0,
       maxAttempts: 3,
@@ -79,7 +59,7 @@ export const remindersStore = {
     };
 
     reminders[reminder.id] = reminder;
-    writeAll(reminders);
+    persist();
 
     return reminder;
   },
@@ -102,8 +82,7 @@ export const remindersStore = {
     reminder.status = 'sent';
     reminder.sentAt = Date.now();
 
-    writeAll(reminders);
-
+    persist();
     return reminder;
   },
 
@@ -115,7 +94,7 @@ export const remindersStore = {
     }
 
     reminder.attempts += 1;
-    reminder.lastError = String(error?.message ?? error);
+    reminder.lastError = String(error?.message ?? error).slice(0, 500);
 
     if (reminder.attempts >= reminder.maxAttempts) {
       reminder.status = 'failed';
@@ -123,8 +102,7 @@ export const remindersStore = {
       reminder.dueAt = Date.now() + 5 * 60 * 1000;
     }
 
-    writeAll(reminders);
-
+    persist();
     return reminder;
   },
 
@@ -136,17 +114,17 @@ export const remindersStore = {
     }
 
     reminder.status = 'cancelled';
-    writeAll(reminders);
-
+    persist();
     return reminder;
   },
 
   cancelByUser(userId, type) {
     let count = 0;
+    const normalizedUserId = String(userId);
 
     for (const reminder of Object.values(reminders)) {
       if (
-        reminder.userId === String(userId) &&
+        reminder.userId === normalizedUserId &&
         (!type || reminder.type === type) &&
         reminder.status === 'pending'
       ) {
@@ -156,15 +134,16 @@ export const remindersStore = {
     }
 
     if (count > 0) {
-      writeAll(reminders);
+      persist();
     }
 
     return count;
   },
 
   listByUser(userId) {
+    const normalizedUserId = String(userId);
     return Object.values(reminders).filter(
-      (reminder) => reminder.userId === String(userId)
+      (reminder) => reminder.userId === normalizedUserId
     );
   },
 
@@ -185,22 +164,18 @@ export const remindersStore = {
       delete reminders[key];
     }
 
-    writeAll(reminders);
+    persist();
   },
+
+  _filePath: store.filePath,
 };
 
 export function formatReminderText(reminder) {
-  const { reasonTitle } = reminder.payload;
-
   const lines = [
     '⏰ Напоминание',
     '',
     'Вы планировали подать заявление повторно.',
   ];
-
-  if (reasonTitle) {
-    lines.push(`Причина, которую разбирали: *${reasonTitle}*.`);
-  }
 
   lines.push(
     '',
@@ -212,7 +187,7 @@ export function formatReminderText(reminder) {
     'Подать заявление: https://www.gosuslugi.ru/',
     '',
     'Если уже подали — напишите «готово».',
-    'Если неактуально — «отмена».'
+    'Если неактуально — «отмена».',
   );
 
   return lines.join('\n');

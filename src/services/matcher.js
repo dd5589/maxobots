@@ -1,5 +1,7 @@
 import { getReasons } from './reasons.js';
 
+const YES_VALUES = new Set(['да', 'yes', 'true', '1', 'y']);
+
 function normalizeText(value) {
   return String(value ?? '')
     .trim()
@@ -9,7 +11,7 @@ function normalizeText(value) {
 }
 
 function isPositiveAnswer(value) {
-  if (value === true) {
+  if (value === true || value === 1) {
     return true;
   }
 
@@ -17,15 +19,38 @@ function isPositiveAnswer(value) {
     return false;
   }
 
-  return ['да', 'yes', 'true', '1'].includes(normalizeText(value));
+  return YES_VALUES.has(normalizeText(value));
 }
 
 function keywordSpecificity(keyword) {
   const normalized = normalizeText(keyword);
+
   return {
     chars: normalized.length,
     words: normalized ? normalized.split(' ').length : 0,
   };
+}
+
+function matchesKeyword(normalizedText, keyword) {
+  const normalizedKeyword = normalizeText(keyword);
+
+  if (!normalizedKeyword) {
+    return false;
+  }
+
+  // Very short keywords such as "ИП" produce too many false positives.
+  if (!normalizedKeyword.includes(' ') && normalizedKeyword.length < 4) {
+    return false;
+  }
+
+  if (normalizedKeyword.includes(' ')) {
+    return normalizedText.includes(normalizedKeyword);
+  }
+
+  const tokens = normalizedText.split(/[^a-zа-я0-9]+/iu).filter(Boolean);
+  const keywordTokens = normalizedKeyword.split(/[^a-zа-я0-9]+/iu).filter(Boolean);
+
+  return keywordTokens.length === 1 && tokens.includes(keywordTokens[0]);
 }
 
 function findBestKeywordMatch(text, keywords = []) {
@@ -36,7 +61,7 @@ function findBestKeywordMatch(text, keywords = []) {
   }
 
   const matches = keywords
-    .filter((keyword) => normalizedText.includes(normalizeText(keyword)))
+    .filter((keyword) => matchesKeyword(normalizedText, keyword))
     .map((keyword) => ({
       keyword,
       ...keywordSpecificity(keyword),
@@ -110,47 +135,51 @@ function sortResults(results) {
   });
 }
 
+function fallbackResult(reasons) {
+  const fallback = reasons.find((reason) => reason.id === 'other');
+
+  return fallback
+    ? [{ reason: fallback, score: 0, matchedSignals: [] }]
+    : [];
+}
+
 export function matchReasons(answers = {}) {
   const reasons = getReasons();
   const results = sortResults(buildResults(answers, reasons));
   const matched = results.filter((item) => item.score > 0);
 
-  if (matched.length > 0) {
-    return matched;
-  }
-
-  const fallback = reasons.find((reason) => reason.id === 'other');
-
-  if (!fallback) {
-    return [];
-  }
-
-  return [
-    {
-      reason: fallback,
-      score: 0,
-      matchedSignals: [],
-    },
-  ];
+  return matched.length > 0 ? matched : fallbackResult(reasons);
 }
 
-export function formatReasonCard(reason) {
+export function formatReasonCard(result) {
+  const reason = result?.reason ?? result;
+  const matchedSignals = result?.matchedSignals ?? [];
+
   const lines = [
+    '⚠️ *Возможная причина*',
     `*${reason.title}*`,
     '',
     reason.explanation,
-    '',
-    '*Что делать:*',
   ];
 
-  for (const action of reason.actions ?? []) {
-    lines.push(`• ${action}`);
+  if (matchedSignals.length > 0) {
+    lines.push('', '*Почему этот вариант выбран:*');
+
+    for (const signal of matchedSignals) {
+      const detail = signal.keyword ? ` — «${signal.keyword}»` : '';
+      lines.push(`• ${signal.key}${detail}`);
+    }
   }
 
   lines.push(
     '',
+    '*Что делать:*',
+    ...(reason.actions ?? []).map((action) => `• ${action}`),
+    '',
     `*Куда обращаться:* ${reason.whereToApply ?? 'СФР, «Госуслуги»'}`,
-    `*Основание:* ${reason.legalRef ?? 'Уточните в СФР'}`
+    `*Основание:* ${reason.legalRef ?? 'Уточните в СФР'}`,
+    '',
+    '_Это информационная подсказка, а не официальное решение ведомства._',
   );
 
   if (Array.isArray(reason.documents) && reason.documents.length > 0) {
@@ -161,7 +190,7 @@ export function formatReasonCard(reason) {
     }
   }
 
-  return lines.join('\\n');
+  return lines.join('\n');
 }
 
-export { isPositiveAnswer };
+export { isPositiveAnswer, normalizeText, findBestKeywordMatch };

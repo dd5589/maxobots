@@ -1,4 +1,5 @@
 import { storage } from '../../services/storage.js';
+import { config } from '../../config.js';
 import { getQuestion, totalQuestions } from '../scenarios/quiz.js';
 import { askNext, finish } from './quiz.js';
 import { handleReminderAnswer } from './reminder.js';
@@ -36,9 +37,10 @@ export function registerMessageHandler(bot) {
       return;
     }
 
+    const safeText = text.slice(0, config.maxAnswerLength);
     const answers = {
       ...state.answers,
-      [q.id]: text,
+      [q.id]: safeText,
     };
 
     const nextStep = state.step + 1;

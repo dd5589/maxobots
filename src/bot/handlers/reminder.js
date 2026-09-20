@@ -12,10 +12,6 @@ export async function handleReminderAnswer(ctx, userId, text) {
       userId,
       type: 'reapply',
       daysFromNow: 3,
-      payload: {
-        reasonId: state.topReasonId,
-        reasonTitle: state.topReasonTitle,
-      },
     });
     const due = new Date(r.dueAt).toLocaleString('ru-RU', {
       timeZone: r.timezone,

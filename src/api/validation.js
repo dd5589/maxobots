@@ -3,17 +3,29 @@ import crypto from 'node:crypto';
 function parseInitData(initData) {
   const params = new URLSearchParams(initData);
   const entries = [...params.entries()];
+  const counts = new Map();
 
-  const hashEntries = entries.filter(([key]) => key === 'hash');
+  for (const [key] of entries) {
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
 
-  if (hashEntries.length !== 1) {
+  const duplicatedKey = [...counts.entries()].find(([, count]) => count !== 1);
+
+  if (duplicatedKey) {
     return {
       ok: false,
-      error: 'invalid_hash_count',
+      error: 'duplicate_param',
     };
   }
 
-  const hash = hashEntries[0][1];
+  const hash = params.get('hash');
+
+  if (!hash) {
+    return {
+      ok: false,
+      error: 'missing_hash',
+    };
+  }
 
   params.delete('hash');
 
@@ -104,7 +116,7 @@ export function validateInitData(
 
   const authDate = Number(parsed.params.get('auth_date'));
 
-  if (!Number.isFinite(authDate)) {
+  if (!Number.isInteger(authDate) || authDate <= 0) {
     return {
       valid: false,
       error: 'bad_auth_date',
@@ -123,7 +135,6 @@ export function validateInitData(
   }
 
   let user = null;
-
   const userRaw = parsed.params.get('user');
 
   if (userRaw) {
@@ -135,6 +146,13 @@ export function validateInitData(
         error: 'bad_user_json',
       };
     }
+  }
+
+  if (!user || (user.id == null && user.user_id == null)) {
+    return {
+      valid: false,
+      error: 'user_missing',
+    };
   }
 
   return {

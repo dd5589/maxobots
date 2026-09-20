@@ -12,7 +12,8 @@
     "dev": "node --watch src/bot/index.js",
     "test": "node --test \"tests/*.test.js\"",
     "test:watch": "node --test --watch \"tests/*.test.js\"",
-    "lint": "node --check src/bot/index.js && node --check src/api/server.js && node --check src/services/matcher.js"
+    "lint": "node --check src/bot/index.js && node --check src/api/server.js && node --check src/services/matcher.js",
+    "check:repo": "bash ./scripts/check-repo.sh"
   },
   "dependencies": {
     "@maxhub/max-bot-api": "0.3.1",
