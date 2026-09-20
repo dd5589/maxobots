@@ -1,0 +1,23 @@
+{
+  "name": "edinoe-posobie-bot",
+  "version": "1.0.0",
+  "description": "Чат-бот для разбора отказа в едином пособии на детей (MAX)",
+  "type": "module",
+  "main": "src/bot/index.js",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "start": "node src/bot/index.js",
+    "dev": "node --watch src/bot/index.js",
+    "test": "node --test \"tests/*.test.js\"",
+    "test:watch": "node --test --watch \"tests/*.test.js\"",
+    "lint": "node --check src/bot/index.js && node --check src/api/server.js && node --check src/services/matcher.js",
+    "check:repo": "bash ./scripts/check-repo.sh"
+  },
+  "dependencies": {
+    "@maxhub/max-bot-api": "0.3.1",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3"
+  }
+}
