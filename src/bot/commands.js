@@ -1,8 +1,20 @@
 import { storage } from '../services/storage.js';
-import { askNext } from './handlers/quiz.js';
+import { categoryKeyboard } from './keyboards.js';
+import { askCategories } from './handlers/quiz.js';
 
 function getUserId(ctx) {
   return ctx.user?.user_id ?? null;
+}
+
+function resetSession(userId) {
+  storage.reset(userId);
+  storage.set(userId, {
+    mode: 'category',
+    step: 0,
+    answers: {},
+    done: false,
+    awaitingReminder: false,
+  });
 }
 
 export function registerCommands(bot) {
@@ -13,22 +25,15 @@ export function registerCommands(bot) {
       return ctx.reply('Не удалось определить пользователя MAX. Попробуйте ещё раз.');
     }
 
-    storage.reset(userId);
-    storage.set(userId, {
-      step: 0,
-      answers: {},
-      done: false,
-      awaitingReminder: false,
-    });
+    resetSession(userId);
 
     await ctx.reply(
-      'Здравствуйте! Я помогу разобраться, почему пришёл отказ ' +
-      'в едином пособии на детей, и что делать дальше.\n\n' +
-      'Отвечу на несколько вопросов — это займёт 2–3 минуты.\n\n' +
-      'Чтобы начать заново в любой момент — /restart'
+      'Здравствуйте! Я помогу пройти один из 4 сценариев по социальной поддержке.\n\n' +
+      'Сначала выберите категорию, затем конкретный сценарий. ' +
+      'Вопросы с вариантами ответа теперь выбираются кнопками.'
     );
 
-    await askNext(bot, ctx, userId);
+    await askCategories(ctx);
   });
 
   bot.command('restart', async (ctx) => {
@@ -38,27 +43,21 @@ export function registerCommands(bot) {
       return ctx.reply('Не удалось определить пользователя MAX. Попробуйте ещё раз.');
     }
 
-    storage.reset(userId);
-    storage.set(userId, {
-      step: 0,
-      answers: {},
-      done: false,
-      awaitingReminder: false,
-    });
-
+    resetSession(userId);
     await ctx.reply('Начинаем заново.');
-    await askNext(bot, ctx, userId);
+    await askCategories(ctx);
   });
 
   bot.command('help', (ctx) => {
     return ctx.reply(
-      'Я помогаю разобрать отказ в едином пособии на детей.\n' +
-      'Команды: /start — начать, /restart — заново, /help — помощь.'
+      'Я помогаю пройти сценарии по социальной поддержке.\n' +
+      'Команды: /start — выбрать категорию и сценарий, ' +
+      '/restart — начать заново, /help — помощь.'
     );
   });
 
   bot.api?.setMyCommands?.([
-    { name: 'start', description: 'Начать разбор отказа' },
+    { name: 'start', description: 'Выбрать категорию и сценарий' },
     { name: 'restart', description: 'Начать заново' },
     { name: 'help', description: 'Помощь' },
   ]).catch((error) => {

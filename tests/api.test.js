@@ -40,6 +40,20 @@ test('GET /api/meta возвращает public cache', async () => {
 });
 
 
+test('GET /api/scenarios возвращает 4 категории и 4 сценария', async () => {
+  const response = await fetch(`${baseUrl}/api/scenarios`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('cache-control'), 'public, max-age=300');
+  const body = await response.json();
+  assert.equal(body.categories.length, 4);
+  assert.equal(body.scenarios.length, 4);
+  assert.deepEqual(
+    body.categories.map((item) => item.id),
+    ['parent', 'student', 'pensioner', 'svo_veteran_family']
+  );
+});
+
+
 test('защищённый endpoint без initData возвращает 401', async () => {
   const protectedServer = startApiServer({ port: 0, host: '127.0.0.1' });
   await new Promise((resolve) => protectedServer.once('listening', resolve));

@@ -34,6 +34,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Meta'
+  /api/scenarios:
+    get:
+      summary: Список категорий и сценариев
+      operationId: getScenarios
+      responses:
+        '200':
+          description: Категории и сценарии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenariosResponse'
+
   /api/reason/{id}:
     get:
       summary: Get a reason card
@@ -130,6 +142,46 @@ components:
           type: array
           items:
             type: string
+  
+    ScenariosResponse:
+      type: object
+      required: [categories, scenarios]
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioCategory'
+        scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioSummary'
+    ScenarioCategory:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+    ScenarioSummary:
+      type: object
+      required: [id, categoryId, title, description]
+      properties:
+        id:
+          type: string
+        categoryId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sources:
+          type: array
+          items:
+            type: string
+
     Reason:
       type: object
       required:

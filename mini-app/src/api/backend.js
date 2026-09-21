@@ -43,6 +43,7 @@ async function request(path, { method = 'GET', body, initData } = {}) {
 
 export const api = {
   getMeta: () => request('/api/meta'),
+  getScenarios: () => request('/api/scenarios'),
   getReason: (id, initData) =>
     request(`/api/reason/${encodeURIComponent(id)}`, { initData }),
   getChecklist: (id, initData) =>

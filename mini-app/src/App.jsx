@@ -104,5 +104,5 @@ export default function App() {
     );
   }
 
-  return <Home onOpenReason={(id) => void openReason(id)} />;
+  return <Home />;
 }

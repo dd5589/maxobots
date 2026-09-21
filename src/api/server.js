@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { config } from '../config.js';
 import { getMeta, findReasonById } from '../services/reasons.js';
+import { getCategories, getScenarios } from '../services/scenarios.js';
 import { validateInitData } from './validation.js';
 
 const CORS = {
@@ -119,7 +120,26 @@ export function createApiServer({ authenticate = requireAuth } = {}) {
     }
 
     if (url.pathname === '/api/meta') {
-      return json(res, 200, getMeta(), {
+      return json(res, 200, {
+        ...getMeta(),
+        categoriesCount: getCategories().length,
+        scenariosCount: getScenarios().length,
+      }, {
+        'Cache-Control': 'public, max-age=300',
+      });
+    }
+
+    if (url.pathname === '/api/scenarios') {
+      return json(res, 200, {
+        categories: getCategories(),
+        scenarios: getScenarios().map((scenario) => ({
+          id: scenario.id,
+          categoryId: scenario.categoryId,
+          title: scenario.title,
+          description: scenario.description,
+          sources: scenario.sources ?? [],
+        })),
+      }, {
         'Cache-Control': 'public, max-age=300',
       });
     }

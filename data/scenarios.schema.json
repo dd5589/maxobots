@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScenariosEngine",
+  "type": "object",
+  "required": [
+    "version",
+    "updatedAt",
+    "categories",
+    "scenarios"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "categoryId",
+          "title",
+          "description",
+          "engine"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "engine": {
+            "type": "string",
+            "enum": [
+              "reason_matcher",
+              "guided"
+            ]
+          },
+          "questionsRef": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "text", "type"],
+              "properties": {
+                "id": { "type": "string" },
+                "text": { "type": "string" },
+                "type": { "type": "string", "enum": ["text", "choice"] },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "type": "string" },
+                      {
+                        "type": "object",
+                        "required": ["label"],
+                        "properties": {
+                          "label": { "type": "string" },
+                          "value": { "type": "string" },
+                          "next": { "type": ["string", "null"] },
+                          "resultId": { "type": ["string", "null"] }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "next": { "type": ["string", "null"] },
+                "nextByValue": { "type": "object" }
+              }
+            }
+          },
+          "results": {
+            "type": "object"
+          },
+          "result": {
+            "type": "object"
+          },
+          "sources": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
