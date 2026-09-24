@@ -6,10 +6,7 @@ build:
   dockerfile: Dockerfile
   skip: false
 run:
-  image: null
-  command: null
-  args: null
   persistenceMount: /data
-  containerPort: "10000"
+  containerPort: "80"
   singleton: true
   zeroDowntime: false
