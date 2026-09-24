@@ -4,9 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
+      BOT_TOKEN: ${BOT_TOKEN:?BOT_TOKEN is required}
       NODE_ENV: ${NODE_ENV:-development}
       BOT_TRANSPORT: ${BOT_TRANSPORT:-polling}
       PORT: ${PORT:-10000}
