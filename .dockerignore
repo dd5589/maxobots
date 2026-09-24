@@ -1,11 +1,8 @@
 node_modules
-mini-app/node_modules
-mini-app/dist
-.git
-.gitignore
 .env
-*.log
+runtime
 coverage
-tests
-scripts
-README.md
+.git
+.github
+.vscode
+*.log

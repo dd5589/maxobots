@@ -1,40 +1,28 @@
-import { Bot } from '@maxhub/max-bot-api';
-import { config, assertBotToken } from '../config.js';
-import { registerCommands } from './commands.js';
-import { registerMessageHandler } from './handlers/message.js';
-import { registerScenarioHandlers } from './handlers/scenarios.js';
-import { startScheduler, stopScheduler } from '../services/scheduler.js';
-import { startApiServer } from '../api/server.js';
+import { assertRuntimeConfig, config } from '../config.js';
+import { createBot, startBot, stopBot } from './runtime.js';
 
-assertBotToken();
+async function main() {
+  assertRuntimeConfig();
 
-const bot = new Bot(config.botToken);
+  const bot = createBot();
 
-registerCommands(bot);
-registerMessageHandler(bot);
-registerScenarioHandlers(bot);
+  const shutdown = async (signal) => {
+    console.log(`[bot] Получен ${signal}, останавливаюсь...`);
+    try {
+      await stopBot(bot);
+    } finally {
+      process.exit(0);
+    }
+  };
 
-startScheduler({ expression: '* * * * *' });
-const apiServer = startApiServer();
+  process.once('SIGTERM', () => void shutdown('SIGTERM'));
+  process.once('SIGINT', () => void shutdown('SIGINT'));
 
-const shutdown = async (signal) => {
-  console.log(`[bot] Получен ${signal}, останавливаюсь...`);
+  await startBot(bot);
+  console.log(`[bot] Запущен, transport=${config.botTransport}`);
+}
 
-  try {
-    stopScheduler();
-    apiServer.close();
-  } finally {
-    process.exit(0);
-  }
-};
-
-process.on('SIGTERM', () => {
-  void shutdown('SIGTERM');
+main().catch((error) => {
+  console.error('[bot] Критическая ошибка запуска:', error);
+  process.exit(1);
 });
-
-process.on('SIGINT', () => {
-  void shutdown('SIGINT');
-});
-
-bot.start();
-console.log('[bot] Запущен');

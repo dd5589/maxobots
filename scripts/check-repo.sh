@@ -3,11 +3,13 @@ set -euo pipefail
 
 fail() { echo "FAIL: $1"; exit 1; }
 
-for path in .env runtime node_modules mini-app/node_modules mini-app/dist; do
-  if git ls-files --error-unmatch "$path" >/dev/null 2>&1 || git ls-files "$path/**" | grep -q .; then
-    fail "запрещённый путь отслеживается Git: $path"
-  fi
-done
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  for path in .env runtime node_modules mini-app DATA-API.yaml openapi.yaml src/api; do
+    if git ls-files --error-unmatch "$path" >/dev/null 2>&1 || git ls-files "$path/**" | grep -q .; then
+      fail "запрещённый путь всё ещё отслеживается Git index: $path (после удаления добавьте изменения через git add -A)"
+    fi
+  done
+fi
 
 if [ -f .env ]; then
   git check-ignore -q .env || fail ".env существует локально, но не игнорируется Git"
@@ -20,4 +22,8 @@ if grep -R --exclude-dir=.git --exclude-dir=node_modules --exclude='*.lock' -nE 
   fail "похоже на секрет/ключ в исходниках"
 fi
 
-echo '✅ Репозиторий не содержит рабочие секреты и runtime-зависимости в Git'
+for forbidden in DATA-API.yaml openapi.yaml mini-app Caddyfile; do
+  [ ! -e "$forbidden" ] || fail "файл/каталог не должен входить в no-own-api release: $forbidden"
+done
+
+echo '✅ Репозиторий не содержит рабочие секреты, собственный API или Mini App артефакты'

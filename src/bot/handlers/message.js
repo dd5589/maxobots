@@ -8,7 +8,6 @@ import {
   totalQuestions,
 } from '../scenarios/engine.js';
 import { askNext, finish, askCategories, askScenarios } from './quiz.js';
-import { handleReminderAnswer } from './reminder.js';
 
 export function registerMessageHandler(bot) {
   bot.on('message_created', async (ctx) => {
@@ -23,16 +22,6 @@ export function registerMessageHandler(bot) {
 
     if (!state) {
       await ctx.reply('Нажмите /start, чтобы выбрать категорию и сценарий.');
-      return;
-    }
-
-    if (state.awaitingReminder) {
-      await handleReminderAnswer(ctx, userId, text);
-      return;
-    }
-
-    if (text.toLowerCase() === 'готово') {
-      await handleReminderAnswer(ctx, userId, text);
       return;
     }
 

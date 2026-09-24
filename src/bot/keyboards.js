@@ -2,20 +2,31 @@ import { Keyboard } from '@maxhub/max-bot-api';
 import { getCategories, getScenariosByCategory } from '../services/scenarios.js';
 import { getOptions } from './scenarios/engine.js';
 
-function rows(items, makeButton, perRow = 2) {
-  const result = [];
-  for (let i = 0; i < items.length; i += perRow) {
-    result.push(items.slice(i, i + perRow).map(makeButton));
+const MAX_SAFE_BUTTON_TEXT_LENGTH = 30;
+
+function assertButtonText(text) {
+  if (typeof text !== 'string' || !text.trim()) {
+    throw new Error('Текст кнопки не может быть пустым');
   }
-  return result;
+  if (text.includes('\n')) {
+    throw new Error(`Текст кнопки не должен содержать переносы: ${text}`);
+  }
+  if (text.length > MAX_SAFE_BUTTON_TEXT_LENGTH) {
+    throw new Error(`Слишком длинный текст кнопки (${text.length} > ${MAX_SAFE_BUTTON_TEXT_LENGTH}): ${text}`);
+  }
+  return text;
+}
+
+function callbackButton(text, payload) {
+  return Keyboard.button.callback(assertButtonText(text), payload);
 }
 
 export function categoryKeyboard() {
   const categories = getCategories();
   return Keyboard.inlineKeyboard(
-    rows(categories, (category) =>
-      Keyboard.button.callback(category.title, `category:${category.id}`)
-    )
+    categories.map((category) => [
+      callbackButton(category.title, `category:${category.id}`),
+    ])
   );
 }
 
@@ -24,29 +35,20 @@ export function scenarioKeyboard(categoryId) {
 
   return Keyboard.inlineKeyboard([
     ...scenarios.map((scenario) => [
-      Keyboard.button.callback(scenario.title, `scenario:${scenario.id}`),
+      callbackButton(scenario.buttonTitle ?? scenario.title, `scenario:${scenario.id}`),
     ]),
-    [Keyboard.button.callback('← Все категории', 'categories')],
+    [callbackButton('← Все категории', 'categories')],
   ]);
 }
 
 export function choiceKeyboard(scenarioId, question) {
   const buttons = getOptions(question).map((option, index) =>
-    Keyboard.button.callback(option.label, `answer:${scenarioId}:${question.id}:${index}`)
+    callbackButton(
+      option.label,
+      `answer:${scenarioId}:${question.id}:${index}`
+    )
   );
 
-  return Keyboard.inlineKeyboard(rows(buttons, (button) => button, 2));
-}
-
-export function miniAppKeyboard(url, payload) {
-  return Keyboard.inlineKeyboard([
-    [
-      Keyboard.button.openApp(
-        'Открыть чек-лист',
-        url,
-        undefined,
-        payload,
-      ),
-    ],
-  ]);
+  // Один вариант на строку даёт каждой кнопке всю доступную ширину MAX.
+  return Keyboard.inlineKeyboard(buttons.map((button) => [button]));
 }

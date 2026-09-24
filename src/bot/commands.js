@@ -13,7 +13,6 @@ function resetSession(userId) {
     step: 0,
     answers: {},
     done: false,
-    awaitingReminder: false,
   });
 }
 

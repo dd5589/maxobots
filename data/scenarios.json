@@ -40,7 +40,14 @@
       "questionsRef": "parent_unified_allowance",
       "result": {
         "note": "Это информационная подсказка. Официальную причину и порядок обжалования нужно сверять с решением ведомства."
-      }
+      },
+      "sources": [
+        "https://sfr.gov.ru/grazhdanam/semyam_s_detmi/edinoe_posobie/otvety_na_voprosy/",
+        "https://sfr.gov.ru/grazhdanam/semyam_s_detmi/edinoe_posobie~8406",
+        "https://www.gosuslugi.ru/",
+        "https://www.consultant.ru/document/cons_doc_LAW_20403/"
+      ],
+      "buttonTitle": "Единое пособие: отказ"
     },
     {
       "id": "student_social_scholarship_refusal",
@@ -100,7 +107,7 @@
           "options": [
             {
               "value": "orphan",
-              "label": "Сирота / оставшийся без попечения родителей",
+              "label": "Сирота / без попечения",
               "next": "basisProof"
             },
             {
@@ -110,17 +117,17 @@
             },
             {
               "value": "lost_parents",
-              "label": "Потерял(а) обоих или единственного родителя во время обучения",
+              "label": "Потеря родителей при учёбе",
               "next": "basisProof"
             },
             {
               "value": "veteran_military",
-              "label": "Ветеран / инвалид вследствие военной травмы / иной военный статус из закона",
+              "label": "Военный статус по закону",
               "next": "basisProof"
             },
             {
               "value": "state_social_help",
-              "label": "Получил(а) государственную социальную помощь",
+              "label": "Гос. социальная помощь",
               "next": "basisProof"
             },
             {
@@ -159,17 +166,17 @@
           "options": [
             {
               "value": "proof_not_accepted",
-              "label": "Не приняли или не учли подтверждающий документ",
+              "label": "Документ не приняли / не учли",
               "next": "refusalTextDocument"
             },
             {
               "value": "social_help_not_counted",
-              "label": "Не учли документ о государственной социальной помощи",
+              "label": "Не учли гос. соцпомощь",
               "next": "refusalTextSocialHelp"
             },
             {
               "value": "formal_requirements",
-              "label": "Отказали по формальному основанию / правилам организации",
+              "label": "Формальное основание / правила",
               "next": "refusalTextFormal"
             },
             {
@@ -348,7 +355,8 @@
           "whereToApply": "Учебная организация",
           "legalRef": "Федеральный закон № 273-ФЗ, статья 36"
         }
-      }
+      },
+      "buttonTitle": "Социальная стипендия: отказ"
     },
     {
       "id": "pensioner_social_supplement_refusal",
@@ -378,7 +386,7 @@
             },
             {
               "value": "self_employed",
-              "label": "Есть деятельность / ИП / самозанятость",
+              "label": "Работа / ИП / самозанятость",
               "resultId": "working_status"
             }
           ]
@@ -390,7 +398,7 @@
           "options": [
             {
               "value": "moscow_sakhalin",
-              "label": "Москва или Сахалинская область",
+              "label": "Москва или Сахалинская обл.",
               "next": "pmCheckSpecial"
             },
             {
@@ -400,7 +408,7 @@
             },
             {
               "value": "unknown_region",
-              "label": "Не знаю / не хочу уточнять",
+              "label": "Не знаю / не уточняю",
               "next": "regionText"
             }
           ]
@@ -456,12 +464,12 @@
           "options": [
             {
               "value": "yes",
-              "label": "Да, потом перестали платить",
+              "label": "Да, перестали платить",
               "next": "stoppedCause"
             },
             {
               "value": "no",
-              "label": "Нет, никогда не назначали",
+              "label": "Нет, не назначали",
               "next": "refusalText"
             },
             {
@@ -478,7 +486,7 @@
           "options": [
             {
               "value": "employment_change",
-              "label": "Была работа / изменилась занятость",
+              "label": "Была работа / изменилась",
               "resultId": "check_status_change"
             },
             {
@@ -488,7 +496,7 @@
             },
             {
               "value": "data_change",
-              "label": "Изменились пенсионные или социальные выплаты",
+              "label": "Изменились пенсия / выплаты",
               "resultId": "check_payment_data"
             },
             {
@@ -621,7 +629,8 @@
           "whereToApply": "СФР; в Москве и Сахалинской области — также проверить региональный орган",
           "legalRef": "СФР: социальная доплата до уровня прожиточного минимума пенсионера"
         }
-      }
+      },
+      "buttonTitle": "Социальная доплата: отказ"
     },
     {
       "id": "svo_veteran_family_support_refusal",
@@ -657,7 +666,7 @@
             },
             {
               "value": "family_deceased_missing",
-              "label": "Семья погибшего / умершего / пропавшего без вести",
+              "label": "Семья погибшего / пропавшего",
               "next": "measureType"
             }
           ]
@@ -674,7 +683,7 @@
             },
             {
               "value": "family_payment",
-              "label": "Выплата семье погибшего / умершего",
+              "label": "Выплата семье погибшего",
               "next": "statusDocument"
             },
             {
@@ -684,12 +693,12 @@
             },
             {
               "value": "rehab",
-              "label": "Реабилитация / санаторно-курортное лечение",
+              "label": "Реабилитация / санаторий",
               "next": "statusDocument"
             },
             {
               "value": "regional",
-              "label": "Региональная или муниципальная мера",
+              "label": "Региональная / муниципальная",
               "resultId": "regional_measure"
             },
             {
@@ -882,7 +891,8 @@
           "whereToApply": "СФР для федеральных мер; региональный/муниципальный орган — для соответствующей региональной меры",
           "legalRef": "СФР: меры поддержки участников СВО и ветеранов; выплаты семьям погибших (умерших, пропавших без вести)"
         }
-      }
+      },
+      "buttonTitle": "Меры поддержки СВО / семьи"
     }
   ]
 }

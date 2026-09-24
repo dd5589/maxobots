@@ -7,33 +7,21 @@ services:
     env_file:
       - .env
     environment:
-      NODE_ENV: production
-      TZ: ${TZ:-Europe/Moscow}
-      PORT: 3000
-      DATA_DIR: /app/runtime
-      MAX_INIT_DATA_MAX_AGE_SECONDS: ${MAX_INIT_DATA_MAX_AGE_SECONDS:-3600}
-      ALLOW_DEV_AUTH: "false"
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
-    ports:
-      - "3000:3000"
+      NODE_ENV: ${NODE_ENV:-development}
+      BOT_TRANSPORT: ${BOT_TRANSPORT:-polling}
+      PORT: ${PORT:-10000}
+      DATA_DIR: ${DATA_DIR:-/app/runtime}
+      MAX_WEBHOOK_DOMAIN: ${MAX_WEBHOOK_DOMAIN:-}
+      MAX_WEBHOOK_PATH: ${MAX_WEBHOOK_PATH:-/webhook}
+      MAX_WEBHOOK_SECRET: ${MAX_WEBHOOK_SECRET:-}
+      MAX_WEBHOOK_PORT: ${MAX_WEBHOOK_PORT:-10000}
+      MAX_WEBHOOK_UPDATE_TYPES: ${MAX_WEBHOOK_UPDATE_TYPES:-bot_started,message_created,message_callback}
+      MAX_WEBHOOK_START_RETRIES: ${MAX_WEBHOOK_START_RETRIES:-12}
+      MAX_WEBHOOK_RETRY_DELAY_MS: ${MAX_WEBHOOK_RETRY_DELAY_MS:-5000}
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-7200}
+      MAX_ANSWER_LENGTH: ${MAX_ANSWER_LENGTH:-2000}
     volumes:
       - botdata:/app/runtime
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  miniapp:
-    build:
-      context: ./mini-app
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-    depends_on:
-      bot:
-        condition: service_healthy
 
 volumes:
   botdata:

@@ -1,27 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE="${1:-http://localhost:3000}"
-MINI="${2:-http://localhost:8080}"
-
 fail() { echo "FAIL: $1"; exit 1; }
 
-echo "== 1. health =="
-curl -fsS "$BASE/health" >/dev/null || fail "health"
+echo '== 1. release audit =='
+npm run release:audit >/dev/null || fail 'release-audit'
 
-echo "== 2. meta =="
-curl -fsS "$BASE/api/meta" | grep -q '"version"' || fail "meta"
+echo '== 2. unit tests =='
+npm run test:unit >/dev/null || fail 'unit tests'
 
-echo "== 3. reason без initData =="
-code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/reason/smv_error")
-[ "$code" = "401" ] || fail "ожидали 401, получили $code"
+echo '== 3. scenario tests =='
+npm run test:scenarios >/dev/null || fail 'scenario tests'
 
-echo "== 4. checklist без initData =="
-code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/checklist/smv_error")
-[ "$code" = "401" ] || fail "ожидали 401, получили $code"
-
-echo "== 5. miniapp отвечает =="
-curl -fsS "$MINI/" | grep -q '<div id="root">' || fail "miniapp"
+echo '== 4. docker compose config =='
+if command -v docker >/dev/null 2>&1; then
+  docker compose config >/dev/null || fail 'docker compose config'
+else
+  echo 'SKIP: Docker не установлен в текущей среде'
+fi
 
 echo
-echo "✅ Все проверки пройдены"
+echo '✅ Local release smoke checks passed'

@@ -1,6 +1,4 @@
 node_modules/
-mini-app/node_modules/
-mini-app/dist/
 .env
 .env.*
 !.env.example
@@ -12,4 +10,3 @@ coverage/
 !.vscode/launch.json
 !.vscode/extensions.json
 runtime/
-.env

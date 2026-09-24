@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: maxobots-edinoe-posobie
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: node src/bot/index.js
+    maxShutdownDelaySeconds: 60
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BOT_TRANSPORT
+        value: webhook
+      - key: BOT_TOKEN
+        sync: false
+      - key: MAX_WEBHOOK_SECRET
+        sync: false
+      - key: MAX_WEBHOOK_PATH
+        value: /webhook
+      - key: MAX_WEBHOOK_PORT
+        value: "10000"
+      - key: SESSION_TTL_SECONDS
+        value: "7200"
+      - key: MAX_ANSWER_LENGTH
+        value: "2000"

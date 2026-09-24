@@ -8,9 +8,8 @@ import {
   totalQuestions as scenarioQuestionCount,
 } from '../scenarios/engine.js';
 import { storage } from '../../services/storage.js';
-import { config } from '../../config.js';
 import { matchReasons, formatReasonCard } from '../../services/matcher.js';
-import { miniAppKeyboard, choiceKeyboard, categoryKeyboard, scenarioKeyboard } from '../keyboards.js';
+import { choiceKeyboard, categoryKeyboard, scenarioKeyboard } from '../keyboards.js';
 
 export function getQuestion(state) {
   if (!state?.scenarioId) return null;
@@ -88,7 +87,7 @@ export async function finish(bot, ctx, userId) {
 
     storage.update(userId, {
       done: true,
-      awaitingReminder: true,
+      awaitingReminder: false,
       topReasonId: top.id,
       lastScenarioId: scenario.id,
     });
@@ -111,22 +110,15 @@ export async function finish(bot, ctx, userId) {
       );
     }
 
-    if (config.miniAppUrl) {
-      await ctx.reply('Откройте чек-лист в мини-приложении:', {
-        attachments: [miniAppKeyboard(config.miniAppUrl, top.id)],
-      });
-    }
 
     await ctx.reply(
       '📌 Что делать дальше:\n' +
       '1. Подготовьте документы из списка.\n' +
       '2. Подайте заявление повторно, если такой порядок предусмотрен.\n' +
       '3. При повторном отказе — запросите письменное разъяснение.\n\n' +
-      'Выберите другой сценарий ниже. Напоминание можно настроить следующим сообщением.',
+      'Выберите другую категорию или сценарий:',
       { attachments: [categoryKeyboard()] }
     );
-
-    await ctx.reply('Напомнить о подаче через 3 дня? Напишите «да» или «нет».');
     return;
   }
 
