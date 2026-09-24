@@ -10,6 +10,6 @@ run:
   command: null
   args: null
   persistenceMount: /data
-  containerPort: "10000"
+  containerPort: "80"
   singleton: true
   zeroDowntime: false
