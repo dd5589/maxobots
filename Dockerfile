@@ -7,7 +7,7 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV TZ=Europe/Moscow
-ENV PORT=10000
+ENV PORT=80
 ENV DATA_DIR=/app/runtime
 ENV NODE_EXTRA_CA_CERTS=/app/certs/russian_bundle.crt
 
