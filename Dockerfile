@@ -9,9 +9,12 @@ ENV NODE_ENV=production
 ENV TZ=Europe/Moscow
 ENV PORT=10000
 ENV DATA_DIR=/app/runtime
-RUN apk add --no-cache tini \
+
+RUN apk add --no-cache tini ca-certificates \
+  && update-ca-certificates \
   && mkdir -p /app/runtime \
   && chown -R node:node /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY data ./data
